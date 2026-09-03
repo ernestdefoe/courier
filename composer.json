@@ -1,0 +1,41 @@
+{
+    "name": "ernestdefoe/courier",
+    "description": "Reply by email for Flarum — members answer a notification from their inbox and it becomes a post. No mail server to run, no DNS to set.",
+    "keywords": ["flarum", "email", "notifications", "reply-by-email"],
+    "type": "flarum-extension",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.3",
+        "flarum/core": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0 || ^11.0"
+    },
+    "authors": [
+        {
+            "name": "ernestdefoe",
+            "email": "ernestdefoe@ernestdefoe.online"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Ernestdefoe\\Courier\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ernestdefoe\\Courier\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "Courier",
+            "category": "feature",
+            "icon": {
+                "name": "fas fa-envelope-open-text",
+                "backgroundColor": "#2f6f8f",
+                "color": "#fff"
+            }
+        }
+    }
+}

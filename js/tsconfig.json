@@ -1,0 +1,5 @@
+{
+  "extends": "flarum-tsconfig",
+  "include": ["src/**/*"],
+  "compilerOptions": { "typeRoots": ["../vendor/flarum/core/js/dist-typings", "./node_modules/@types"] }
+}

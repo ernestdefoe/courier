@@ -1,0 +1,7 @@
+ernestdefoe-courier:
+  admin:
+    settings:
+      site_key_label: Site key
+      site_key_help: From your client area. It is bound to this domain — the same key will not work on another site.
+      relay_url_label: Service URL
+      relay_url_help: Leave this alone unless you have been told otherwise.
