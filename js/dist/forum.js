@@ -1,2 +1,0 @@
-(()=>{const e=e=>{Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})};let t={};(()=>{"use strict";e(t)})(),module.exports=t})();
-//# sourceMappingURL=forum.js.map
