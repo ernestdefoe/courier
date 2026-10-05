@@ -5,11 +5,9 @@ namespace Ernestdefoe\Courier\Console;
 use Ernestdefoe\Courier\Relay\RelayClient;
 use Flarum\Console\AbstractCommand;
 use Flarum\Discussion\Discussion;
-use Flarum\Post\CommentPost;
+use Flarum\Api\JsonApi;
+use Flarum\Api\Resource\PostResource;
 use Flarum\User\User;
-use Carbon\Carbon;
-use Flarum\Post\Event\Posted;
-use Illuminate\Contracts\Events\Dispatcher as EventDispatcher;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -22,7 +20,7 @@ class CollectRepliesCommand extends AbstractCommand
 {
     public function __construct(
         protected RelayClient $relay,
-        protected EventDispatcher $events,
+        protected JsonApi $api,
         protected LoggerInterface $log
     ) {
         parent::__construct();
@@ -146,33 +144,28 @@ class CollectRepliesCommand extends AbstractCommand
         }
 
         try {
-            $post = new CommentPost();
-            $post->discussion_id = $discussion->id;
-            $post->user_id       = $user->id;
-            $post->type          = 'comment';
-            $post->created_at    = Carbon::now();
-
             /*
-             * 🚨 Through setContentAttribute, so the formatter runs. Writing
-             * to the column directly stores raw text where parsed markup is
-             * expected, and the post then renders as whatever the renderer
-             * makes of unparsed input.
+             * 🚨 Through the API's own create endpoint, as the member — not a
+             * hand-built CommentPost. Everything that screens a new post hangs
+             * off the Saving event that endpoint fires: flarum/approval holds
+             * the post there for anyone without "reply without approval", and
+             * other moderation extensions do the same. Saving the model by hand
+             * skipped all of it, so a member whose posts must be approved could
+             * publish instantly by replying to an email instead.
+             *
+             * The endpoint also runs the formatter as the member, fires Posted
+             * (notifications, search, the discussion's last post) and marks the
+             * discussion read for them, exactly as a reply typed on the forum.
+             * process() does not run the endpoint's permission check, which is
+             * why can('reply') is asked above.
              */
-            $post->setContentAttribute($body, $user);
-            $post->save();
-
-            $discussion->refreshCommentCount();
-            $discussion->refreshLastPost();
-            $discussion->save();
-
-            /*
-             * 🚨 Fire Posted. Everything that reacts to a new post hangs off
-             * this — notifications to other participants, search indexing, and
-             * moderation screening. A reply that arrives by email is a post
-             * like any other, and skipping the event would make it the one
-             * post on the forum that nothing sees.
-             */
-            $this->events->dispatch(new Posted($post, $user));
+            $this->api->forResource(PostResource::class)->forEndpoint('create')->process([
+                'data' => [
+                    'type'          => 'posts',
+                    'attributes'    => ['content' => $body],
+                    'relationships' => ['discussion' => ['data' => ['type' => 'discussions', 'id' => (string) $discussion->id]]],
+                ],
+            ], [], ['actor' => $user]);
         } catch (\Throwable $e) {
             $this->log->error('[courier] could not post a reply: ' . $e->getMessage());
 
