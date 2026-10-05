@@ -46,7 +46,34 @@ class RelayClient
 
     public function configured(): bool
     {
-        return $this->s('relay_url') !== '' && $this->s('site_key') !== '';
+        return $this->relayUrl() !== '' && $this->s('site_key') !== '';
+    }
+
+    /**
+     * 🚨 HTTPS only. Every call carries the site key, and the relay is sent
+     * members' email addresses and post text and answers with posts to make
+     * in their names. Over plain HTTP anyone on the path could read all of
+     * that or hand back replies of their own. A non-HTTPS URL counts as not
+     * connected, so notifications go out the ordinary way instead. Plain HTTP
+     * is allowed only to this machine, for local development.
+     */
+    private function relayUrl(): string
+    {
+        $url = rtrim($this->s('relay_url'), '/');
+        if ($url === '') {
+            return '';
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        $host   = strtolower(trim((string) parse_url($url, PHP_URL_HOST), '[]'));
+
+        if ($scheme === 'https' || ($scheme === 'http' && in_array($host, ['localhost', '127.0.0.1', '::1'], true))) {
+            return $url;
+        }
+
+        $this->log->warning('[courier] the service URL must start with https:// — not connecting', ['url' => $url]);
+
+        return '';
     }
 
     /**
@@ -59,7 +86,7 @@ class RelayClient
             return null;
         }
 
-        $url = rtrim($this->s('relay_url'), '/') . self::PREFIX . ltrim($path, '/');
+        $url = $this->relayUrl() . self::PREFIX . ltrim($path, '/');
 
         try {
             $res = $this->http->post($url, [

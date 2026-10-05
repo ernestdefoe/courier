@@ -31,6 +31,7 @@ Admin → Courier:
 ## Good to know
 
 - **It replaces Flarum's email notifications rather than adding to them,** so nothing goes out twice. Notifications that aren't about a post go out as Flarum's ordinary email. Members without a confirmed email address are not emailed.
+- **What the service sees.** To send a reply-able notification, Courier gives the service the member's email address, display name and forum user ID, the discussion and post IDs, the notification's subject, and the post's text (the first 1,500 characters). Replies come back as text with the member and discussion they belong to. Nothing else about your forum or its members is sent. The service URL must be `https://`; anything else is treated as not connected and notifications go out the ordinary way.
 - **Replies are collected by Flarum's scheduler.** Make sure `php flarum schedule:run` runs from cron every minute.
 - **A subscription is required:** <https://ernestdefoe.online/account>. Requires Flarum 2.0 and PHP 8.3+.
 
