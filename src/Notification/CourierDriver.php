@@ -50,9 +50,23 @@ class CourierDriver implements NotificationDriverInterface
         }
 
         $unsent = [];
+        $body   = $this->body($post, $subject);
+        $down   = false;
 
         foreach ($users as $user) {
             if (! $user instanceof User || ! $user->email || ! $user->is_email_confirmed) {
+                continue;
+            }
+
+            /*
+             * 🚨 Once the relay has failed to answer (or refused this forum),
+             * it will fail for everybody else in this batch too. Without this,
+             * a notification to 50 subscribers waited out 50 connect timeouts
+             * in a row — inside the reply request on the default sync queue.
+             */
+            if ($down) {
+                $unsent[] = $user;
+
                 continue;
             }
 
@@ -61,9 +75,13 @@ class CourierDriver implements NotificationDriverInterface
                 'discussionId' => (int) $post->discussion_id,
                 'postId'       => (int) $post->id,
                 'subject'      => $subject,
-                'body'         => $this->body($post, $subject),
+                'body'         => $body,
                 'to'           => ['address' => $user->email, 'name' => $user->display_name],
             ]);
+
+            if ($ok === null) {
+                $down = true;
+            }
 
             if (! ($ok['sent'] ?? false)) {
                 $unsent[] = $user;
