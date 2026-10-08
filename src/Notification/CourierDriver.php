@@ -54,7 +54,10 @@ class CourierDriver implements NotificationDriverInterface
         $down   = false;
 
         foreach ($users as $user) {
-            if (! $user instanceof User || ! $user->email || ! $user->is_email_confirmed) {
+            // As the forum's own email driver does: a member who turned these
+            // emails off gets none, from either of us.
+            if (! $user instanceof User || ! $user->email || ! $user->is_email_confirmed
+                || ! $user->shouldEmail($blueprint::getType())) {
                 continue;
             }
 
