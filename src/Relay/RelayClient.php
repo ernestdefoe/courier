@@ -33,15 +33,15 @@ class RelayClient
         ?Client $http = null
     ) {
         $this->http = $http ?? new Client([
-            'timeout'         => 20,
+            'timeout' => 20,
             'connect_timeout' => 6,
-            'http_errors'     => true,
+            'http_errors' => true,
         ]);
     }
 
     private function s(string $key): string
     {
-        return (string) ($this->settings->get('courier.' . $key) ?: '');
+        return (string) ($this->settings->get('courier.'.$key) ?: '');
     }
 
     public function configured(): bool
@@ -65,7 +65,7 @@ class RelayClient
         }
 
         $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
-        $host   = strtolower(trim((string) parse_url($url, PHP_URL_HOST), '[]'));
+        $host = strtolower(trim((string) parse_url($url, PHP_URL_HOST), '[]'));
 
         if ($scheme === 'https' || ($scheme === 'http' && in_array($host, ['localhost', '127.0.0.1', '::1'], true))) {
             return $url;
@@ -86,13 +86,13 @@ class RelayClient
             return null;
         }
 
-        $url = $this->relayUrl() . self::PREFIX . ltrim($path, '/');
+        $url = $this->relayUrl().self::PREFIX.ltrim($path, '/');
 
         try {
             $res = $this->http->post($url, [
                 'headers' => array_filter([
-                    'Authorization' => 'Bearer ' . $this->s('site_key'),
-                    'Accept'        => 'application/json',
+                    'Authorization' => 'Bearer '.$this->s('site_key'),
+                    'Accept' => 'application/json',
                     /*
                      * The key is bound to one origin and re-checked on every
                      * call, so a client that sends no Origin is refused every
@@ -116,21 +116,21 @@ class RelayClient
              * unlike an outage, retrying will never fix it.
              */
             $status = $e->getResponse()->getStatusCode();
-            $body   = json_decode((string) $e->getResponse()->getBody(), true);
+            $body = json_decode((string) $e->getResponse()->getBody(), true);
 
             $this->log->error('[courier] the service refused this forum', [
-                'path'   => $path,
+                'path' => $path,
                 'status' => $status,
                 'reason' => $body['error'] ?? null,
                 'origin' => $this->forumUrl(),
             ]);
 
-            $this->lastRefusal = (string) ($body['error'] ?? ('http_' . $status));
+            $this->lastRefusal = (string) ($body['error'] ?? ('http_'.$status));
 
             return null;
         } catch (GuzzleException $e) {
             $this->log->warning('[courier] could not reach the service', [
-                'path'  => $path,
+                'path' => $path,
                 'error' => $e->getMessage(),
             ]);
 

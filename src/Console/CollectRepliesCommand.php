@@ -3,10 +3,10 @@
 namespace Ernestdefoe\Courier\Console;
 
 use Ernestdefoe\Courier\Relay\RelayClient;
-use Flarum\Console\AbstractCommand;
-use Flarum\Discussion\Discussion;
 use Flarum\Api\JsonApi;
 use Flarum\Api\Resource\PostResource;
+use Flarum\Console\AbstractCommand;
+use Flarum\Discussion\Discussion;
 use Flarum\User\User;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -54,7 +54,7 @@ class CollectRepliesCommand extends AbstractCommand
              * somebody looking at their network for a configuration problem.
              */
             if ($this->relay->lastRefusal !== null) {
-                $this->error('The service refused this forum (' . $this->relay->lastRefusal . '). Check the site key, and that it was issued for this domain.');
+                $this->error('The service refused this forum ('.$this->relay->lastRefusal.'). Check the site key, and that it was issued for this domain.');
             } else {
                 $this->error('Could not reach the service. Nothing was lost — replies stay queued.');
             }
@@ -63,7 +63,7 @@ class CollectRepliesCommand extends AbstractCommand
         }
 
         $messages = (array) ($response['messages'] ?? []);
-        $posted   = [];
+        $posted = [];
 
         foreach ($messages as $message) {
             $id = (int) ($message['id'] ?? 0);
@@ -73,7 +73,7 @@ class CollectRepliesCommand extends AbstractCommand
             }
 
             if ($dry) {
-                $this->info('Would post reply ' . $id . ' to discussion ' . (int) ($message['discussionId'] ?? 0));
+                $this->info('Would post reply '.$id.' to discussion '.(int) ($message['discussionId'] ?? 0));
 
                 continue;
             }
@@ -101,27 +101,27 @@ class CollectRepliesCommand extends AbstractCommand
             $this->relay->post('mail/poll', ['ack' => $posted]);
         }
 
-        $this->info(($dry ? 'Would post ' : 'Posted ') . count($posted) . ' repl' . (count($posted) === 1 ? 'y' : 'ies') . '.');
+        $this->info(($dry ? 'Would post ' : 'Posted ').count($posted).' repl'.(count($posted) === 1 ? 'y' : 'ies').'.');
 
         return 0;
     }
 
     private function post(array $message): bool
     {
-        $userId       = (int) ($message['userId'] ?? 0);
+        $userId = (int) ($message['userId'] ?? 0);
         $discussionId = (int) ($message['discussionId'] ?? 0);
-        $body         = trim((string) ($message['body'] ?? ''));
+        $body = trim((string) ($message['body'] ?? ''));
 
         if ($body === '' || $userId <= 0 || $discussionId <= 0) {
             return false;
         }
 
-        $user       = User::find($userId);
+        $user = User::find($userId);
         $discussion = Discussion::find($discussionId);
 
         if (! $user || ! $discussion) {
             $this->log->info('[courier] dropping a reply for a missing user or discussion', [
-                'user'       => $userId,
+                'user' => $userId,
                 'discussion' => $discussionId,
             ]);
 
@@ -136,7 +136,7 @@ class CollectRepliesCommand extends AbstractCommand
          */
         if (! $user->can('reply', $discussion)) {
             $this->log->info('[courier] refusing a reply the member may no longer make', [
-                'user'       => $userId,
+                'user' => $userId,
                 'discussion' => $discussionId,
             ]);
 
@@ -161,13 +161,13 @@ class CollectRepliesCommand extends AbstractCommand
              */
             $this->api->forResource(PostResource::class)->forEndpoint('create')->process([
                 'data' => [
-                    'type'          => 'posts',
-                    'attributes'    => ['content' => $body],
+                    'type' => 'posts',
+                    'attributes' => ['content' => $body],
                     'relationships' => ['discussion' => ['data' => ['type' => 'discussions', 'id' => (string) $discussion->id]]],
                 ],
             ], [], ['actor' => $user]);
         } catch (\Throwable $e) {
-            $this->log->error('[courier] could not post a reply: ' . $e->getMessage());
+            $this->log->error('[courier] could not post a reply: '.$e->getMessage());
 
             return false;
         }

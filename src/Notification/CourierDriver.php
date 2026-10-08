@@ -41,7 +41,7 @@ class CourierDriver implements NotificationDriverInterface
         }
 
         $subject = $blueprint->getEmailSubject($this->translator);
-        $post    = $this->postFrom($blueprint);
+        $post = $this->postFrom($blueprint);
 
         if (! $post || ! $post->discussion_id) {
             $this->fallback->send($blueprint, $users);
@@ -50,8 +50,8 @@ class CourierDriver implements NotificationDriverInterface
         }
 
         $unsent = [];
-        $body   = $this->body($post, $subject);
-        $down   = false;
+        $body = $this->body($post, $subject);
+        $down = false;
 
         foreach ($users as $user) {
             // As the forum's own email driver does: a member who turned these
@@ -74,12 +74,12 @@ class CourierDriver implements NotificationDriverInterface
             }
 
             $ok = $this->relay->post('mail/notify', [
-                'userId'       => (int) $user->id,
+                'userId' => (int) $user->id,
                 'discussionId' => (int) $post->discussion_id,
-                'postId'       => (int) $post->id,
-                'subject'      => $subject,
-                'body'         => $body,
-                'to'           => ['address' => $user->email, 'name' => $user->display_name],
+                'postId' => (int) $post->id,
+                'subject' => $subject,
+                'body' => $body,
+                'to' => ['address' => $user->email, 'name' => $user->display_name],
             ]);
 
             if ($ok === null) {
@@ -123,12 +123,12 @@ class CourierDriver implements NotificationDriverInterface
         $content = trim(strip_tags((string) ($post->content ?? '')));
 
         if (mb_strlen($content) > 1500) {
-            $content = mb_substr($content, 0, 1500) . '…';
+            $content = mb_substr($content, 0, 1500).'…';
         }
 
         $author = $post->user->display_name ?? 'Someone';
 
-        return $author . " wrote:\n\n" . $content
-            . "\n\n---\nReply to this email and your reply will be posted to the discussion.";
+        return $author." wrote:\n\n".$content
+            ."\n\n---\nReply to this email and your reply will be posted to the discussion.";
     }
 }

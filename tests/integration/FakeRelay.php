@@ -4,9 +4,9 @@ namespace Ernestdefoe\Courier\Tests\integration;
 
 use Ernestdefoe\Courier\Relay\RelayClient;
 use Flarum\Extend\ExtenderInterface;
+use Flarum\Extension\Extension;
 use Flarum\Foundation\Config;
 use Flarum\Settings\SettingsRepositoryInterface;
-use Flarum\Extension\Extension;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
