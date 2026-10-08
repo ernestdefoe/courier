@@ -30,7 +30,9 @@ return [
          * is invisible beside what mail already spends in transit — and a
          * tighter loop would poll an empty queue all day on a quiet forum.
          */
-        ->schedule(CollectRepliesCommand::class, fn ($event) => $event->everyFiveMinutes()),
+        ->schedule(CollectRepliesCommand::class, function ($event) {
+            $event->everyFiveMinutes();
+        }),
 
     (new Extend\Settings())
         ->default('courier.relay_url', 'https://ernestdefoe.online')

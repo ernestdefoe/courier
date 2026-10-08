@@ -3,13 +3,13 @@
 namespace Ernestdefoe\Courier\Notification;
 
 use Ernestdefoe\Courier\Relay\RelayClient;
+use Flarum\Locale\TranslatorInterface;
 use Flarum\Notification\Blueprint\BlueprintInterface;
 use Flarum\Notification\Driver\EmailNotificationDriver;
 use Flarum\Notification\Driver\NotificationDriverInterface;
 use Flarum\Notification\MailableInterface;
 use Flarum\Post\Post;
 use Flarum\User\User;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Sends reply-able notifications through the relay, and everything else the
@@ -105,7 +105,7 @@ class CourierDriver implements NotificationDriverInterface
 
     private function postFrom(BlueprintInterface $blueprint): ?Post
     {
-        $subject = method_exists($blueprint, 'getSubject') ? $blueprint->getSubject() : null;
+        $subject = $blueprint->getSubject();
 
         return $subject instanceof Post ? $subject : null;
     }
@@ -123,7 +123,7 @@ class CourierDriver implements NotificationDriverInterface
             $content = mb_substr($content, 0, 1500) . '…';
         }
 
-        $author = $post->user?->display_name ?? 'Someone';
+        $author = $post->user->display_name ?? 'Someone';
 
         return $author . " wrote:\n\n" . $content
             . "\n\n---\nReply to this email and your reply will be posted to the discussion.";
