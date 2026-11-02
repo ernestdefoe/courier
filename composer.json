@@ -1,7 +1,12 @@
 {
     "name": "ernestdefoe/courier",
     "description": "Reply by email for Flarum — members answer a notification from their inbox and it becomes a post. No mail server to run, no DNS to set.",
-    "keywords": ["flarum", "email", "notifications", "reply-by-email"],
+    "keywords": [
+        "flarum",
+        "email",
+        "notifications",
+        "reply-by-email"
+    ],
     "type": "flarum-extension",
     "license": "proprietary",
     "require": {
@@ -16,8 +21,9 @@
     },
     "authors": [
         {
-            "name": "ernestdefoe",
-            "email": "ernestdefoe@ernestdefoe.online"
+            "name": "Ernest Defoe",
+            "email": "ernestdefoe@gmail.com",
+            "homepage": "https://ernestdefoe.online"
         }
     ],
     "autoload": {
