@@ -11,11 +11,11 @@
     "license": "proprietary",
     "require": {
         "php": ">=8.3",
-        "flarum/core": "^2.0"
+        "flarum/core": "^2.0",
+        "guzzlehttp/guzzle": "^7.7"
     },
     "require-dev": {
         "flarum/phpstan": "^2.0",
-        "flarum/tags": "^2.0",
         "flarum/mentions": "^2.0",
         "flarum/testing": "^2.0"
     },

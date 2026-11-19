@@ -12,6 +12,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Container\Container;
 use Psr\Log\LoggerInterface;
 
@@ -35,7 +36,7 @@ trait FakeRelay
      * notification drivers, and the relay client inside Courier's, are built
      * during boot.
      */
-    protected function relay(Response ...$responses): void
+    protected function relay(Response|\Throwable ...$responses): void
     {
         $this->relayRequests = [];
         $stack = HandlerStack::create(new MockHandler($responses));
@@ -56,6 +57,7 @@ trait FakeRelay
                     $c->make(SettingsRepositoryInterface::class),
                     $c->make(Config::class),
                     $c->make(LoggerInterface::class),
+                    $c->make(CacheRepository::class),
                     $this->client
                 ));
             }

@@ -15,6 +15,7 @@ replies go missing in the first place.
 ## What it will not do
 
 - **Post from a forged sender.** Who a reply is from is decided by the token in the address Courier issued, never by the `From:` header, which anyone can set to anything.
+- **Let the service choose who a reply is from.** Courier keeps its own record of which members it emailed about which discussion. A reply the service hands back is posted only for a member this forum emailed about that discussion in the last 30 days, so even a compromised service or a stolen site key cannot post as any other member.
 - **Post on behalf of someone who has lost permission.** Permissions are re-checked when the reply lands, not assumed from the fact they were emailed. An email round-trip is long enough for a member to be suspended.
 - **Post auto-replies.** Out-of-office messages, bounces, mailing-list traffic and delivery reports are dropped. Otherwise an auto-responder answers a notification, the reply becomes a post, the post sends a notification, and a forum fills overnight.
 - **Lose a notification when the service is down.** Anything the service cannot take is sent the ordinary way instead. Those members lose the ability to reply by email for that one message, which is far better than never hearing about it.
@@ -48,6 +49,7 @@ Then enable **Courier** in the admin panel and paste your site key. Nothing else
 
 ```bash
 composer update ernestdefoe/courier
+php flarum migrate
 php flarum cache:clear
 ```
 

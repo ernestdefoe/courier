@@ -29,9 +29,10 @@ return [
          * Every five minutes. Email is not a real-time medium — a few minutes
          * is invisible beside what mail already spends in transit — and a
          * tighter loop would poll an empty queue all day on a quiet forum.
+         * Never two runs at once: both would post the same batch.
          */
         ->schedule(CollectRepliesCommand::class, function ($event) {
-            $event->everyFiveMinutes();
+            $event->everyFiveMinutes()->withoutOverlapping();
         }),
 
     (new Extend\Settings())

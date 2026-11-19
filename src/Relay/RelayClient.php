@@ -4,6 +4,7 @@ namespace Ernestdefoe\Courier\Relay;
 
 use Flarum\Foundation\Config;
 use Flarum\Settings\SettingsRepositoryInterface;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
@@ -21,17 +22,26 @@ class RelayClient
 {
     private const PREFIX = '/api/steward/v1/';
 
+    /** Set for a minute when a call to the service failed or errored (not a refusal). */
+    private const DOWN_KEY = 'courier.relay_down';
+
     private Client $http;
 
     /** Set when the service answered and refused us, as opposed to not answering. */
-    public ?string $lastRefusal = null;
+    private ?string $lastRefusal = null;
 
     public function __construct(
         private SettingsRepositoryInterface $settings,
         private Config $config,
         private LoggerInterface $log,
+        private CacheRepository $cache,
         ?Client $http = null
     ) {
+        /*
+         * Injected in tests. Otherwise built here with this client's own
+         * timeouts: Flarum binds no shared Guzzle client, and autowiring a
+         * bare Client would leave it with no timeout at all.
+         */
         $this->http = $http ?? new Client([
             'timeout' => 20,
             'connect_timeout' => 6,
@@ -41,7 +51,26 @@ class RelayClient
 
     private function s(string $key): string
     {
-        return (string) ($this->settings->get('courier.'.$key) ?: '');
+        return (string) $this->settings->get('courier.'.$key);
+    }
+
+    /**
+     * Connected, and not failing right now.
+     *
+     * 🚨 Once a call has failed or errored, the next minute's calls would fail
+     * the same way. Without this, a notification to 50 subscribers queued 50
+     * jobs that each waited out a connect timeout before falling back to
+     * ordinary mail.
+     */
+    public function available(): bool
+    {
+        return $this->configured() && ! $this->cache->has(self::DOWN_KEY);
+    }
+
+    /** Why the service refused the last call, or null when it did not refuse. */
+    public function lastRefusal(): ?string
+    {
+        return $this->lastRefusal;
     }
 
     public function configured(): bool
@@ -82,7 +111,9 @@ class RelayClient
      */
     public function post(string $path, array $payload): ?array
     {
-        if (! $this->configured()) {
+        $this->lastRefusal = null;
+
+        if (! $this->available()) {
             return null;
         }
 
@@ -109,26 +140,11 @@ class RelayClient
 
             return is_array($body) ? $body : [];
         } catch (ClientException $e) {
-            /*
-             * 🚨 A refusal is not an outage, and saying so matters. "Could not
-             * reach the service" sends somebody looking at their network for a
-             * problem that is actually a wrong key or an unbound origin — and
-             * unlike an outage, retrying will never fix it.
-             */
-            $status = $e->getResponse()->getStatusCode();
-            $body = json_decode((string) $e->getResponse()->getBody(), true);
-
-            $this->log->error('[courier] the service refused this forum', [
-                'path' => $path,
-                'status' => $status,
-                'reason' => $body['error'] ?? null,
-                'origin' => $this->forumUrl(),
-            ]);
-
-            $this->lastRefusal = (string) ($body['error'] ?? ('http_'.$status));
+            $this->refused($path, $e);
 
             return null;
         } catch (GuzzleException $e) {
+            $this->cache->put(self::DOWN_KEY, true, 60);
             $this->log->warning('[courier] could not reach the service', [
                 'path' => $path,
                 'error' => $e->getMessage(),
@@ -136,6 +152,28 @@ class RelayClient
 
             return null;
         }
+    }
+
+    /**
+     * 🚨 A refusal is not an outage, and saying so matters. "Could not reach
+     * the service" sends somebody looking at their network for a problem that
+     * is actually a wrong key or an unbound origin — and unlike an outage,
+     * retrying will never fix it.
+     */
+    private function refused(string $path, ClientException $e): void
+    {
+        $status = $e->getResponse()->getStatusCode();
+        $body = json_decode((string) $e->getResponse()->getBody(), true);
+        $reason = is_array($body) ? ($body['error'] ?? null) : null;
+
+        $this->log->error('[courier] the service refused this forum', [
+            'path' => $path,
+            'status' => $status,
+            'reason' => $reason,
+            'origin' => $this->forumUrl(),
+        ]);
+
+        $this->lastRefusal = (string) ($reason ?? ('http_'.$status));
     }
 
     /**

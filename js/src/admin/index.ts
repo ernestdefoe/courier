@@ -1,9 +1,7 @@
 /**
  * Admin entry.
  *
- * 🚨 Declared through the `extend` export, NOT `app.initializers.add(...)` +
- * `app.extensionData`. In Flarum 2 the initializer runs before
- * `app.extensionData` exists, so the older pattern throws and the whole
- * extension is reported as failing to initialise.
+ * 🚨 Declared through the `extend` export with `Extend.Admin`. Flarum 2 has
+ * no `app.extensionData`: the 1.x way of registering admin settings is gone.
  */
 export { default as extend } from './extend';

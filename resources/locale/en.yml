@@ -1,7 +1,13 @@
 ernestdefoe-courier:
+  email:
+    wrote: "{author} wrote:"
+    someone: Someone
+    reply_hint: Reply to this email and your reply will be posted to the discussion.
+    unsubscribe: "Stop getting these emails: {url}"
+    settings: "Choose which emails you get: {url}"
   admin:
     settings:
       site_key_label: Site key
-      site_key_help: From your client area. It is bound to this domain — the same key will not work on another site.
+      site_key_help: "From your client area. It is bound to this domain, so the same key will not work on another site. While connected, the service is sent each reply-able notification (the member's email address, display name and the post's text) and hands back members' email replies. A reply is posted only for a member this forum emailed about that discussion in the last 30 days, and only if they may still reply there."
       relay_url_label: Service URL
       relay_url_help: Leave this alone unless you have been told otherwise.
